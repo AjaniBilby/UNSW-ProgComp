@@ -1,0 +1,19 @@
+4 Sample1
+L D 2 L
+2 D D D
+D D 3 D
+1 D L L
+5 Sample2
+D L L 7 L
+D L L D D
+1 D L D 1
+D D D D D
+L 5 L L L
+6 Sample3
+2 D 1 D 1 D
+L D D D D .
+D D L 4 D L
+3 D 4 L D .
+L L D D D .
+D . D L L 6
+0 END
