@@ -8,11 +8,8 @@ function Matcher(gcode, scode){
   for (let k=0; k<=9; k++){
     var k8 = Math.pow(8, k); //8^k
 
-    var tgc = Math.trunc(gcode / k8); //tructated gcode
-    var tgs = Math.trunc(scode / k8);
-
-    var p = tgc % 8;
-    var q = tgs % 8;
+    var p = Math.trunc(gcode / k8) % 8;
+    var q = Math.trunc(scode / k8) % 8;
 
     var r = p-q;
     var s = 2*r + 3*q;
@@ -38,14 +35,22 @@ function Encode(g){
     c = parseInt(c);
 
     d = (3*c + 7) % 10;
-    r = r + Math.pow(2, (3*d+2)) + k*Math.pow(8,d);
+    r = r + Math.pow(2, (3*d + 2)) + k*Math.pow(8,d);
     k = k + 1;
   }
 
   return r;
 }
 
+function Fix(number){
+  number = number.toString();
 
+  while (number.length < 4){
+    number = '0'+number;
+  }
+
+  return number;
+}
 
 class Rule{
   constructor(number, statement){
@@ -66,28 +71,48 @@ class Rule{
   match(number){
     var b = 0;
     var c = 0;
+    var s = '';
 
-    var checked = [];
-    for (let i=0; i<this.number.length; i++){
-      if (number[i] === this.number[i]){
-        b =+ 1;
+    //NOTE: MATCHING THE WRONG WAY
+    var matchedKey = [];
+    var matchedSearch = [];
+
+    for (let i=0; i<number.length; i++){
+      if (!matchedSearch[i] && !matchedKey[i] && number[i] === this.number[i]){
+        matchedSearch[i] = true;
+        matchedKey[i] = true;
+        b += 1;
+        s += 'B';
+        continue;
+      }
+    }
+
+    for (let j=0; j<this.number.length; j++){
+      if (matchedKey[j]){
         continue;
       }
 
-      for (let j=0; j<this.number.length; j++){
-        if (checked[j]){
+      for (let i=0; i<number.length; i++){
+        if (matchedSearch[i]){
           continue;
         }
 
-        if (this.number[j] === number[i]){
-          checked[j] = true;
+        if (number[i] === this.number[j]){
+          matchedSearch[i] = true;
+          matchedKey[j] = true;
+
           c += 1;
-          break; //found a place
+          s += "C";
+          break;
         }
       }
     }
 
-    return {b, c};
+    while (s.length < 4){
+      s += ' ';
+    }
+
+    return {b, c, s};
   }
 
   fits(number){
@@ -99,12 +124,8 @@ class Candidates{
   constructor(){
     this.options = [];
     for (let i=0; i<=9999; i++){
-      var num = i.toString();
-      while (num.length<4){ //Fix length
-        num = '0'+num;
-      }
 
-      this.options.push(num);
+      this.options.push(Fix(i));
     }
   }
 
@@ -126,33 +147,24 @@ class Candidates{
 }
 
 
+// var answer = new Rule(Fix(Math.floor(Math.random() * 9999)), 'BBBB');
+// console.log('\nAnwser:', answer.number);
+var answer = Encode(83916806);
 
-var anwser = new Rule('9153', 'BBBB');
-
-// var number = Encode('0431');
 var game = new Candidates();
 
-for (var i=0; i<1000; i++){
-  var guessN = game.best;                        //Guess Number
+for (let i=0; i<1000; i++){
+  var guessN = game.best;
+  // var guessR = answer.match(guessN).s;
+  var guessR = Matcher(answer, Encode(guessN));
 
-
-  // var guessR = Matcher(number, Encode(guessN));  //Guess Result
-  //CUSTOM
-  var guessR = '';
-  var r = anwser.match(guessN);
-  for (let i=0; i<r.b; i++){
-    guessR += 'B';
-  }
-  for (let i=0; i<r.c; i++){
-    guessR += 'C';
-  }
-
-  if (guessR === "BBBB"){
-    break;
-  }
   game.constrain(new Rule(guessN, guessR));
 
-  console.log(i, guessN, r, guessR, game.options.length);
+  console.log(`Guess ${i} ${guessN} gives ${guessR} Candidates remaining: ${game.options.length}`);
+
+  if (game.options.length <= 1){
+    break;
+  }
 }
 
-console.log(i, guessN, r, guessR, game.options.length);
+console.log(`Solution: ${game.options[0]}`);
