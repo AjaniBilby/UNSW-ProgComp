@@ -149,7 +149,7 @@ class Candidates{
 
 // var answer = new Rule(Fix(Math.floor(Math.random() * 9999)), 'BBBB');
 // console.log('\nAnwser:', answer.number);
-var answer = Encode(83916806);
+var answer = 83916806;
 
 var game = new Candidates();
 
